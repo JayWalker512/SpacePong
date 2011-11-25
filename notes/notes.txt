@@ -1,0 +1,9 @@
+Notes on figuring out how to cross compile:
+
+i586-pc-mingw32-gcc
+
+/usr/bin/i586-mingw32msvc-gcc main.c -o pong_win32 -lSDL -lSDL_gfx -lSDL_ttf -I/usr/include/SDL
+/usr/bin/i586-mingw32msvc-gcc main.c -o pong_win32 -mwindows -lSDL -lSDL_gfx -lSDL_ttf -I/usr/i586-mingw32msvc/include/SDL 
+
+WORKS: /usr/bin/i586-mingw32msvc-gcc main.c /usr/i586-mingw32msvc/lib/SDL_gfx.dll -o pong_win32.exe -mwindows -lSDL -lSDL_ttf -I/usr/i586-mingw32msvc/include/SDL
+
