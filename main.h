@@ -35,6 +35,7 @@ typedef struct {
 	int twoplayer;
 	int winner;
 	int fullscreen;
+	int resx, resy;
 	} s_state;
 	
 enum SPRITE_TYPES {
@@ -118,7 +119,8 @@ int progressbar = 0;
 
 //prototypes
 //General Purpose/Engine Functions
-int InitSDL(int fullscreen); //set up SDL. Returns 1 on success, 0 on failure.
+int InitSDL(s_state GameState); //set up SDL. Returns 1 on success, 0 on failure.
+int InitArgs(int argc, char *argv[]);
 void InitMisc(void); //various things that need to be initialized
 void DrawText(char text[128], int x, int y); //draws white text with black bkg
 void ClearScreen(int r, int g, int b); //clear screen with any color

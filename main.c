@@ -2,7 +2,7 @@
 
 //SDLpong main file
 //compile (on linux) with:
-//gcc main.c -o pong -lSDL -lSDL_gfx -lSDL_ttf -lSDL_image -I/usr/include/SDL
+	//gcc main.c -o pong -lSDL -lSDL_gfx -lSDL_ttf -lSDL_image -I/usr/include/SDL
 
 /* SDLpong written by Brandon Foltz as practice for coding in C.
    This code may not be as nice/clean as it could be, but it's a 
@@ -23,7 +23,9 @@ TODO: Clean up code!
 //standard includes
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <string.h>
+
+//file handling and sys stuff
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -77,9 +79,10 @@ int WinMain(int argc, char *argv[])
 int main(int argc, char *argv[])
 {	
 	
-	GameState.fullscreen = 0;
+	InitArgs(argc, argv);
+	//GameState.fullscreen = 0;
 	
-	if(!InitSDL(GameState.fullscreen)) //set up SDL stuffz
+	if(!InitSDL(GameState)) //set up SDL stuffz
 	{
 		puts("SDL Init failed!");
 		return 0; //no need to GameQuit() because nothing is initialized
@@ -121,7 +124,24 @@ int main(int argc, char *argv[])
 //General Purpose/Engine Functions    
 //#####################################
 
-int InitSDL(int fullscreen)
+int InitArgs(int argc, char *argv[])
+{
+	//might want some extra error checking in here
+	int i = 0;
+	for(i=0;i<argc;i++)
+	{
+		if(0 == strcmp(argv[i], "-w"))
+			GameState.resx = atoi(argv[i+1]);
+		
+		if(0 == strcmp(argv[i], "-h"))
+			GameState.resy = atoi(argv[i+1]);
+			
+		puts(argv[i]);
+	}
+	return 1; //unless fail
+}
+
+int InitSDL(s_state GameState)
 {
 	//this func returns 0 on failure, 1 on success
 
@@ -144,9 +164,9 @@ int InitSDL(int fullscreen)
 	}
 	
 	//set up SDL window
-	if(!(fullscreen))
+	if(!(GameState.fullscreen))
 	{
-		if (!(screen = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, BPP, SDL_SWSURFACE)))
+		if (!(screen = SDL_SetVideoMode(GameState.resx, GameState.resy, BPP, SDL_HWSURFACE)))
 		//SDL_FULLSCREEN)))//SDL_SWSURFACE || SDL_FULLSCREEN)))char imgname[64];
 		{
 			puts("SDL Init Failed.");
@@ -154,9 +174,9 @@ int InitSDL(int fullscreen)
     		return 0;
 		}
    	 }
-	else if(fullscreen)
+	else if(GameState.fullscreen)
 	{
-		if (!(screen = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, BPP, SDL_FULLSCREEN)))
+		if (!(screen = SDL_SetVideoMode(GameState.resx, GameState.resy, BPP, SDL_FULLSCREEN | SDL_HWSURFACE)))
 		{
 			puts("SDL Init Failed.");
     		SDL_Quit();
@@ -164,7 +184,7 @@ int InitSDL(int fullscreen)
 		}
 	}	
     
-	SDL_WM_SetCaption( WINDOW_TITLE, WINDOW_TITLE ); //set window caption
+	SDL_WM_SetCaption(WINDOW_TITLE, WINDOW_TITLE); //set window caption
 	
 	if(GameState.debug)
 		puts("SDL Init Success!");
@@ -176,7 +196,7 @@ void InitMisc(void)
 {
 	//render "loading..."
 	//SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));
-	DrawText("Loading...", (WINDOW_WIDTH / 2) - 22, (WINDOW_HEIGHT / 2) - 32);
+	DrawText("Loading...", (GameState.resx / 2) - 22, (GameState.resy / 2) - 32);
 	UpdateProgressBar(0,1);
 
 	GameState.debug = 0; //debug mode is only useful when run from terminal
@@ -497,18 +517,18 @@ int UpdateProgressBar(int mode, int param)
 		progressbar = param;
 		
 	//bar container
-	rectangleRGBA(screen, (WINDOW_WIDTH / 2) - 52, (WINDOW_HEIGHT / 2) - 12, \
-				(WINDOW_WIDTH / 2) + 52, (WINDOW_HEIGHT / 2) + 11, \
+	rectangleRGBA(screen, (GameState.resx / 2) - 52, (GameState.resy / 2) - 12, \
+				(GameState.resx / 2) + 52, (GameState.resy / 2) + 11, \
 				255,255,255,255);	
 	//bar				
 	SDL_Rect bar;
-	bar.x = (WINDOW_WIDTH / 2) - 50;
-	bar.y = (WINDOW_HEIGHT / 2) - 10;
+	bar.x = (GameState.resx / 2) - 50;
+	bar.y = (GameState.resy / 2) - 10;
 	bar.h = 20;
 	bar.w = progressbar;
 	SDL_FillRect(screen, &bar, SDL_MapRGB(screen->format, 0, 255, 0));
-	//rectangleRGBA(screen, (WINDOW_WIDTH / 2) - 50, (WINDOW_HEIGHT / 2) - 10, \
-				((WINDOW_WIDTH / 2) - 50) + progressbar, (WINDOW_HEIGHT / 2) + 10, \
+	//rectangleRGBA(screen, (GameState.resx / 2) - 50, (GameState.resy / 2) - 10, \
+				((GameState.resx / 2) - 50) + progressbar, (GameState.resy / 2) + 10, \
 				0,255,0,255);			
 					
 	SDL_Flip(screen);
@@ -529,8 +549,8 @@ void GameQuit(void)
 
 void InitMenu(void)
 {
-	Ball.x = RandInt(1,WINDOW_WIDTH - BALL_SIZE);
-	Ball.y = RandInt(1,WINDOW_HEIGHT - BALL_SIZE);
+	Ball.x = RandInt(1,GameState.resx - BALL_SIZE);
+	Ball.y = RandInt(1,GameState.resy - BALL_SIZE);
 	Ball.xspeed = RandFloat(1,BALL_MAX_SPEED);
 	Ball.yspeed = RandFloat(1,BALL_MAX_SPEED);
 	Paddle[0].score = 0; Paddle[1].score = 0; //better fix...	
@@ -606,12 +626,12 @@ void MenuKeyCheck(void)
           			if(!GameState.fullscreen)
           			{
           				GameState.fullscreen = 1;
-          				InitSDL(GameState.fullscreen);
+          				InitSDL(GameState);
           			}
           			else
           			{
           				GameState.fullscreen = 0;
-          				InitSDL(GameState.fullscreen);
+          				InitSDL(GameState);
           			}
           		}
           		else if(SDLevent.key.keysym.sym == SDLK_b)
@@ -632,12 +652,12 @@ void MenuPhysics(void)
 	
 	//check if it hits the sides, and make it bounce off
 	//nothing fancy, just using center of block as coords
-	if((Ball.x + BALL_SIZE / 2) <= 0 || (Ball.x + BALL_SIZE / 2) >= WINDOW_WIDTH)
+	if((Ball.x + BALL_SIZE / 2) <= 0 || (Ball.x + BALL_SIZE / 2) >= GameState.resx)
 	{
 		Ball.xspeed = -(Ball.xspeed);
 		BallSpark(BALL_HIT_SPARKS);
 	}			
-	if((Ball.y + BALL_SIZE / 2) <= 0 || (Ball.y + BALL_SIZE / 2) >= WINDOW_HEIGHT)
+	if((Ball.y + BALL_SIZE / 2) <= 0 || (Ball.y + BALL_SIZE / 2) >= GameState.resy)
 	{
 		Ball.yspeed = -(Ball.yspeed);
 		BallSpark(BALL_HIT_SPARKS);
@@ -650,13 +670,13 @@ void MenuRender(void)
 	SDL_Rect offset,srcoffset;
 	offset.x = 0;
 	offset.y = 0;
-	offset.w = WINDOW_WIDTH;
-	offset.h = WINDOW_HEIGHT;
+	offset.w = GameState.resx;
+	offset.h = GameState.resy;
 	
 	srcoffset.x = Background.x;
 	srcoffset.y = Background.y;
-	srcoffset.w = WINDOW_WIDTH;
-	srcoffset.h = WINDOW_HEIGHT;
+	srcoffset.w = GameState.resx;
+	srcoffset.h = GameState.resy;
 	SDL_BlitSurface(Background.image, &srcoffset, screen, &offset );
 	//char imgname[64];
 	//draw the ball. It be bouncin' (and it's actually a square)
@@ -677,12 +697,12 @@ void MenuRender(void)
 			if (GameState.winner = 0)
 			{
 				sprintf(EndRoundText, "Player 2 Wins!");
-				DrawText(EndRoundText, ((WINDOW_WIDTH / 2) - (strlen(EndRoundText) * 2)),(WINDOW_HEIGHT / 2) - 24);
+				DrawText(EndRoundText, ((GameState.resx / 2) - (strlen(EndRoundText) * 2)),(GameState.resy / 2) - 24);
 			}
 			else if (GameState.winner = 1)
 			{
 				sprintf(EndRoundText, "Player 1 Wins!");
-				DrawText(EndRoundText, ((WINDOW_WIDTH / 2) - (strlen(EndRoundText) * 2)),(WINDOW_HEIGHT / 2) - 24);
+				DrawText(EndRoundText, ((GameState.resx / 2) - (strlen(EndRoundText) * 2)),(GameState.resy / 2) - 24);
 			}
 		}
 		else 
@@ -690,20 +710,20 @@ void MenuRender(void)
 			if (GameState.winner = 0)
 			{
 				sprintf(EndRoundText, "You Win!");
-				DrawText(EndRoundText, ((WINDOW_WIDTH / 2) - (strlen(EndRoundText) * 2)),(WINDOW_HEIGHT / 2) - 24);
+				DrawText(EndRoundText, ((GameState.resx / 2) - (strlen(EndRoundText) * 2)),(GameState.resy / 2) - 24);
 			}
 			else if (GameState.winner = 1)
 			{
 				sprintf(EndRoundText, "Bot Wins!");
-				DrawText(EndRoundText, ((WINDOW_WIDTH / 2) - (strlen(EndRoundText) * 2)),(WINDOW_HEIGHT / 2) - 24);
+				DrawText(EndRoundText, ((GameState.resx / 2) - (strlen(EndRoundText) * 2)),(GameState.resy / 2) - 24);
 			}
 		}
 	}
 
 	//drawing the menu in the (more or less) middle of the screen	
-	DrawText(MENU_TEXT, ((WINDOW_WIDTH / 2) - (strlen(MENU_TEXT) * 2)),(WINDOW_HEIGHT / 2));
-	DrawText(MENU_TEXT2, ((WINDOW_WIDTH / 2) - (strlen(MENU_TEXT2) * 2)),(WINDOW_HEIGHT / 2) + 14);
-	DrawText(MENU_TEXT3, ((WINDOW_WIDTH / 2) - (strlen(MENU_TEXT3) * 2)),(WINDOW_HEIGHT / 2) + 28);
+	DrawText(MENU_TEXT, ((GameState.resx / 2) - (strlen(MENU_TEXT) * 2)),(GameState.resy / 2));
+	DrawText(MENU_TEXT2, ((GameState.resx / 2) - (strlen(MENU_TEXT2) * 2)),(GameState.resy / 2) + 14);
+	DrawText(MENU_TEXT3, ((GameState.resx / 2) - (strlen(MENU_TEXT3) * 2)),(GameState.resy / 2) + 28);
 }
 
 //#####################################
@@ -843,12 +863,12 @@ void GameKeyCheck(void)
 		  			if(!GameState.fullscreen)
 		  			{
 		  				GameState.fullscreen = 1;
-		  				InitSDL(GameState.fullscreen);
+		  				InitSDL(GameState);
 		  			}
 		  			else
 		  			{
 		  				GameState.fullscreen = 0;
-		  				InitSDL(GameState.fullscreen);
+		  				InitSDL(GameState);
 		  			}
 		  		}
 		  		else if(SDLevent.key.keysym.sym == SDLK_m)
@@ -887,7 +907,7 @@ void GamePhysics(void)
 	//move paddles
 	for(i=0;i<2;i++)
 	{
-		if(Paddle[i].y >= 0 && (Paddle[i].y + PADDLE_LENGTH) <= WINDOW_HEIGHT)
+		if(Paddle[i].y >= 0 && (Paddle[i].y + PADDLE_LENGTH) <= GameState.resy)
 			Paddle[i].y += Paddle[i].yspeed;
 	}
 		
@@ -901,9 +921,9 @@ void GamePhysics(void)
 			under = 0 - Paddle[i].y;
 			Paddle[i].y += under;
 		}
-		else if((Paddle[i].y + PADDLE_LENGTH) > WINDOW_HEIGHT)
+		else if((Paddle[i].y + PADDLE_LENGTH) > GameState.resy)
 		{
-			over = (Paddle[i].y + PADDLE_LENGTH) - WINDOW_HEIGHT;
+			over = (Paddle[i].y + PADDLE_LENGTH) - GameState.resy;
 			Paddle[i].y -= over;
 		}
 	}
@@ -966,7 +986,7 @@ void GamePhysics(void)
 	}
 			
 	//bounce off top/bottom walls
-	if((Ball.y + BALL_SIZE / 2) <= 0 || (Ball.y + BALL_SIZE / 2) >= WINDOW_HEIGHT)
+	if((Ball.y + BALL_SIZE / 2) <= 0 || (Ball.y + BALL_SIZE / 2) >= GameState.resy)
 	{
 		Ball.yspeed = -(Ball.yspeed);
 		BallSpark(BALL_HIT_SPARKS);
@@ -979,13 +999,13 @@ void GameRender(void)
 	SDL_Rect offset,srcoffset;
 	offset.x = 0;
 	offset.y = 0;
-	offset.w = WINDOW_WIDTH;
-	offset.h = WINDOW_HEIGHT;
+	offset.w = GameState.resx;
+	offset.h = GameState.resy;
 	
 	srcoffset.x = Background.x;
 	srcoffset.y = Background.y;
-	srcoffset.w = WINDOW_WIDTH;
-	srcoffset.h = WINDOW_HEIGHT;
+	srcoffset.w = GameState.resx;
+	srcoffset.h = GameState.resy;
 	SDL_BlitSurface(Background.image, &srcoffset, screen, &offset );
 
 	//draw paddles
@@ -1012,7 +1032,7 @@ void GameRender(void)
 	else
 		sprintf(scores,"%d - %d",Paddle[0].score,Paddle[1].score);
 		
-	DrawText(scores,(WINDOW_WIDTH / 2) - (strlen(scores) * 2),10); //middle of screen-ish
+	DrawText(scores,(GameState.resx / 2) - (strlen(scores) * 2),10); //middle of screen-ish
 	
 	//drawing a filled rect to fix the box color problem
 	//maybe this and paddles can be drawn more efficiently?
@@ -1027,7 +1047,7 @@ void GameRender(void)
 	{
 		char delaytext[64];
 		sprintf(delaytext,"%2.2f",( (float)Ball.movedelay / (float)MAX_FPS ) );
-		DrawText(delaytext,(WINDOW_WIDTH / 2) - (strlen(delaytext) * 2),(WINDOW_HEIGHT / 2) + 12); //middle of screen-ish
+		DrawText(delaytext,(GameState.resx / 2) - (strlen(delaytext) * 2),(GameState.resy / 2) + 12); //middle of screen-ish
 	}
 	
 	if(GameState.debug) 
@@ -1038,7 +1058,7 @@ void GameRender(void)
 	}
 		
 	if(GameState.paused)
-		DrawText("Paused",(WINDOW_WIDTH / 2) - (strlen("Paused") * 2),(WINDOW_HEIGHT / 2) + 32); //middle of screen-ish
+		DrawText("Paused",(GameState.resx / 2) - (strlen("Paused") * 2),(GameState.resy / 2) + 32); //middle of screen-ish
 }
 
 void AIThink(void)
@@ -1061,10 +1081,10 @@ void InitGame()
 {
 	//init paddles
 	Paddle[0].x = 16;
-	Paddle[0].y = (WINDOW_HEIGHT / 2) - (PADDLE_LENGTH / 2);
+	Paddle[0].y = (GameState.resy / 2) - (PADDLE_LENGTH / 2);
 	
-	Paddle[1].x = WINDOW_WIDTH - (16 + PADDLE_WIDTH); 
-	Paddle[1].y = (WINDOW_HEIGHT / 2) - (PADDLE_LENGTH / 2);
+	Paddle[1].x = GameState.resx - (16 + PADDLE_WIDTH); 
+	Paddle[1].y = (GameState.resy / 2) - (PADDLE_LENGTH / 2);
 	
 	GameState.winner = -1;
 	
@@ -1075,8 +1095,8 @@ void InitGame()
 
 void ResetBall(void)
 {
-	Ball.x = (WINDOW_WIDTH / 2) - (BALL_SIZE / 2);
-	Ball.y = (WINDOW_HEIGHT / 2) - (BALL_SIZE / 2);
+	Ball.x = (GameState.resx / 2) - (BALL_SIZE / 2);
+	Ball.y = (GameState.resy / 2) - (BALL_SIZE / 2);
 	Ball.movedelay = BALL_DELAY * MAX_FPS;
 	
 	
@@ -1106,7 +1126,7 @@ void GoalCheck(void)
 		Paddle[1].score++; //bot scores a pointer
 		if(!(EndGameCheck()))
 		{
-			Firework(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, \
+			Firework(GameState.resx / 2, GameState.resy / 2, \
 					RandInt(1, 255), RandInt(1, 255), RandInt(1, 255), \
 					255, 200);
 			InitGame(); //reset ball and such
@@ -1118,12 +1138,12 @@ void GoalCheck(void)
 			puts("End game"); //end game screen
 		}
 	}
-	else if((Ball.x + BALL_SIZE / 2) > WINDOW_WIDTH)
+	else if((Ball.x + BALL_SIZE / 2) > GameState.resx)
 	{
 		Paddle[0].score++; //player scores a pointer
 		if(!(EndGameCheck()))
 		{
-			Firework(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, \
+			Firework(GameState.resx / 2, GameState.resy / 2, \
 					RandInt(1, 255), RandInt(1, 255), RandInt(1, 255), \
 					255, 200);
 			InitGame(); //reset ball and such
@@ -1263,12 +1283,12 @@ void ManageBackground(void)
 	Background.y += Background.yspeed;
 	
 	//bounce off walls
-	if(Background.x <= 0 || (Background.x + WINDOW_WIDTH) >= Background.image->w)
+	if(Background.x <= 0 || (Background.x + GameState.resx) >= Background.image->w)
 	{
 		Background.xspeed = -(Background.xspeed);
 	}
 	
-	if(Background.y <= 0 || Background.y + WINDOW_HEIGHT >= Background.image->h)
+	if(Background.y <= 0 || Background.y + GameState.resy >= Background.image->h)
 	{
 		Background.yspeed = -(Background.yspeed);
 	}
