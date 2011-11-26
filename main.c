@@ -2,7 +2,7 @@
 
 //SDLpong main file
 //compile (on linux) with:
-	//gcc main.c -o pong -lSDL -lSDL_gfx -lSDL_ttf -lSDL_image -I/usr/include/SDL
+//gcc main.c -o pong -lSDL -lSDL_gfx -lSDL_ttf -lSDL_image -I/usr/include/SDL
 
 /* SDLpong written by Brandon Foltz as practice for coding in C.
    This code may not be as nice/clean as it could be, but it's a 
@@ -36,14 +36,20 @@ TODO: Clean up code!
 //definitions
 
 //engine
-#define WINDOW_WIDTH 640
-#define WINDOW_HEIGHT 480
+//#define WINDOW_WIDTH 640
+//#define WINDOW_HEIGHT 480
 #define BPP 32
 #define WINDOW_TITLE "SpacePong"
 #define MAX_FPS 32 //set this to some high number to pseudo-uncap fps (even numbers plz)
 
 #define FALSE 0
 #define TRUE !FALSE
+
+//--help text
+#define HELP_TEXT " Usage: pong [options] \n" \
+				" -w [window width in pixels] default: 640 \n" \
+				" -h [window height in pixels] default: 480\n" \
+				" -f starts game in fullscreen mode" 
 
 //menu
 #define MENU_TEXT "Spacebar to play. Esc to quit. Tab for 2 players."
@@ -60,7 +66,7 @@ TODO: Clean up code!
 #define MAX_SCORE 10 //game ends at this score
 
 //some values to tweak AI difficulty with
-#define AI_REACT_DIST WINDOW_WIDTH / 2 //bot wont react until ball reaches middle of screen
+#define AI_REACT_DIST 320 //WINDOW_WIDTH / 2 //bot wont react until ball reaches middle of screen
 #define AI_TOLERANCE 20 //lower num = greater difficulty. more than half PADDLE_LENGTH = bot fail, hard.
 
 //effects values
@@ -80,14 +86,12 @@ int main(int argc, char *argv[])
 {	
 	
 	InitArgs(argc, argv);
-	//GameState.fullscreen = 0;
 	
 	if(!InitSDL(GameState)) //set up SDL stuffz
 	{
 		puts("SDL Init failed!");
 		return 0; //no need to GameQuit() because nothing is initialized
 	}
-
 	InitMisc();
 	SetGameState(STATE_MENU);
 	InitMenu();
@@ -127,16 +131,25 @@ int main(int argc, char *argv[])
 int InitArgs(int argc, char *argv[])
 {
 	//might want some extra error checking in here
+	//initializing default gamestate params
+	GameState.resx = 640;
+	GameState.resy = 480;
+	GameState.fullscreen = 0;
+	
 	int i = 0;
 	for(i=0;i<argc;i++)
 	{
 		if(0 == strcmp(argv[i], "-w"))
 			GameState.resx = atoi(argv[i+1]);
-		
-		if(0 == strcmp(argv[i], "-h"))
+		else if(0 == strcmp(argv[i], "-h"))
 			GameState.resy = atoi(argv[i+1]);
-			
-		puts(argv[i]);
+		else if(0 == strcmp(argv[i], "-f"))
+			GameState.fullscreen = 1;	
+		else if(0 == strcmp(argv[i], "--help"))
+		{
+			puts(HELP_TEXT);
+			GameQuit();
+		}
 	}
 	return 1; //unless fail
 }
