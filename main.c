@@ -57,17 +57,18 @@ TODO: Clean up code!
 #define MENU_TEXT3 "Written by: Brandon Foltz."
 
 //game
-#define PADDLE_SPEED 8
-#define PADDLE_LENGTH 64
-#define PADDLE_WIDTH 12
-#define BALL_MAX_SPEED 10 //this should be less than paddle width to avoid glitching
-#define BALL_SIZE 6
+//these are all old defaults for 640x480
+//#define PADDLE_SPEED 8
+//#define PADDLE_LENGTH 64
+//#define PADDLE_WIDTH 12
+//#define BALL_MAX_SPEED 10 //this should be less than paddle width to avoid glitching
+//#define BALL_SIZE 6
 #define BALL_DELAY 3 //after score, ball delays movement for this many seconds
 #define MAX_SCORE 10 //game ends at this score
 
 //some values to tweak AI difficulty with
-#define AI_REACT_DIST 320 //WINDOW_WIDTH / 2 //bot wont react until ball reaches middle of screen
-#define AI_TOLERANCE 20 //lower num = greater difficulty. more than half PADDLE_LENGTH = bot fail, hard.
+//#define AI_REACT_DIST 320 //WINDOW_WIDTH / 2 //bot wont react until ball reaches middle of screen
+//#define AI_TOLERANCE 20 //lower num = greater difficulty. more than half PADDLE_LENGTH = bot fail, hard.
 
 //effects values
 #define BALL_HIT_SPARKS 12
@@ -84,7 +85,6 @@ int WinMain(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {	
-	
 	InitArgs(argc, argv);
 	
 	if(!InitSDL(GameState)) //set up SDL stuffz
@@ -92,6 +92,7 @@ int main(int argc, char *argv[])
 		puts("SDL Init failed!");
 		return 0; //no need to GameQuit() because nothing is initialized
 	}
+	InitScales();
 	InitMisc();
 	SetGameState(STATE_MENU);
 	InitMenu();
@@ -223,7 +224,6 @@ void InitMisc(void)
 	
 	LoadBackgrounds();
 	UpdateProgressBar(0,1);
-	//InitBackground();
 	
 	//init sprite states!
 	int i;
@@ -245,7 +245,25 @@ void InitMisc(void)
 		Paddle[i].ticks = 0;
 		Paddle[i].score = 0;
 	}
+	
+	//init default AI values
+	AI.reactdist = GameState.resx / 2;
+	AI.tolerance = 20;
+	
 	UpdateProgressBar(0,1);
+}
+
+void InitScales(void)
+{
+	Paddle[0].width = GameState.resx / 50;
+	Paddle[0].height = GameState.resy / 7;
+	Paddle[0].speed = GameState.resy / 60;
+	Paddle[1].width = GameState.resx / 50;
+	Paddle[1].height = GameState.resy / 7;
+	Paddle[1].speed = GameState.resy / 60;
+	
+	Ball.maxspeed = GameState.resx / 64;
+	Ball.size = GameState.resx / 80;
 }
 
 void DrawText(char text[128], int x, int y) 
@@ -269,7 +287,7 @@ void ClearScreen(int r, int g, int b)
 SDL_Surface *LoadImage(char filename[128]) 
 {
 	//Temporary storage for the image that's loaded
-	SDL_Surface* loadedImage = NULL;
+	SDL_Surface *loadedImage = NULL;
 
 	//The optimized image that will be used
 	SDL_Surface* optimizedImage = NULL;
@@ -562,10 +580,10 @@ void GameQuit(void)
 
 void InitMenu(void)
 {
-	Ball.x = RandInt(1,GameState.resx - BALL_SIZE);
-	Ball.y = RandInt(1,GameState.resy - BALL_SIZE);
-	Ball.xspeed = RandFloat(1,BALL_MAX_SPEED);
-	Ball.yspeed = RandFloat(1,BALL_MAX_SPEED);
+	Ball.x = RandInt(1,GameState.resx - Ball.size);
+	Ball.y = RandInt(1,GameState.resy - Ball.size);
+	Ball.xspeed = RandFloat(1,Ball.maxspeed);
+	Ball.yspeed = RandFloat(1,Ball.maxspeed);
 	Paddle[0].score = 0; Paddle[1].score = 0; //better fix...	
 }
 
@@ -665,12 +683,12 @@ void MenuPhysics(void)
 	
 	//check if it hits the sides, and make it bounce off
 	//nothing fancy, just using center of block as coords
-	if((Ball.x + BALL_SIZE / 2) <= 0 || (Ball.x + BALL_SIZE / 2) >= GameState.resx)
+	if((Ball.x + Ball.size / 2) <= 0 || (Ball.x + Ball.size / 2) >= GameState.resx)
 	{
 		Ball.xspeed = -(Ball.xspeed);
 		BallSpark(BALL_HIT_SPARKS);
 	}			
-	if((Ball.y + BALL_SIZE / 2) <= 0 || (Ball.y + BALL_SIZE / 2) >= GameState.resy)
+	if((Ball.y + Ball.size / 2) <= 0 || (Ball.y + Ball.size / 2) >= GameState.resy)
 	{
 		Ball.yspeed = -(Ball.yspeed);
 		BallSpark(BALL_HIT_SPARKS);
@@ -696,8 +714,8 @@ void MenuRender(void)
 	SDL_Rect balldims;
 	balldims.x = Ball.x;
 	balldims.y = Ball.y;
-	balldims.w = BALL_SIZE;
-	balldims.h = BALL_SIZE;
+	balldims.w = Ball.size;
+	balldims.h = Ball.size;
 	SDL_FillRect(screen, &balldims, SDL_MapRGB(screen->format, 255, 255, 255));
 
 	//print winning text on menu once game is over
@@ -813,16 +831,16 @@ void GameKeyCheck(void)
 	SDL_KeyStates = SDL_GetKeyState( NULL );
 	
 	if(SDL_KeyStates[SDLK_UP])
-		Paddle[1].yspeed = -(PADDLE_SPEED);
+		Paddle[1].yspeed = -(Paddle[1].speed);
 	else if(SDL_KeyStates[SDLK_DOWN])
-		Paddle[1].yspeed = PADDLE_SPEED;
+		Paddle[1].yspeed = Paddle[1].speed;
 	
 	if(GameState.twoplayer)
 	{	
 		if(SDL_KeyStates[SDLK_a])
-			Paddle[0].yspeed = -(PADDLE_SPEED);
+			Paddle[0].yspeed = -(Paddle[0].speed);
 		else if(SDL_KeyStates[SDLK_z])
-			Paddle[0].yspeed = PADDLE_SPEED;
+			Paddle[0].yspeed = Paddle[0].speed;
 	}
 
 	while(SDL_PollEvent(&SDLevent))
@@ -920,7 +938,7 @@ void GamePhysics(void)
 	//move paddles
 	for(i=0;i<2;i++)
 	{
-		if(Paddle[i].y >= 0 && (Paddle[i].y + PADDLE_LENGTH) <= GameState.resy)
+		if(Paddle[i].y >= 0 && (Paddle[i].y + Paddle[i].height) <= GameState.resy)
 			Paddle[i].y += Paddle[i].yspeed;
 	}
 		
@@ -934,9 +952,9 @@ void GamePhysics(void)
 			under = 0 - Paddle[i].y;
 			Paddle[i].y += under;
 		}
-		else if((Paddle[i].y + PADDLE_LENGTH) > GameState.resy)
+		else if((Paddle[i].y + Paddle[i].height) > GameState.resy)
 		{
-			over = (Paddle[i].y + PADDLE_LENGTH) - GameState.resy;
+			over = (Paddle[i].y + Paddle[i].height) - GameState.resy;
 			Paddle[i].y -= over;
 		}
 	}
@@ -959,9 +977,9 @@ void GamePhysics(void)
 	//ill use (more accurate) rectangle based collision detection later
 	for(i=0;i<2;i++)
 	{
-		if( (Ball.y + BALL_SIZE / 2) > Paddle[i].y && (Ball.y + BALL_SIZE / 2) < (Paddle[i].y + PADDLE_LENGTH) )
+		if( (Ball.y + Ball.size / 2) > Paddle[i].y && (Ball.y + Ball.size / 2) < (Paddle[i].y + Paddle[i].height) )
 		{
-			if( (Ball.x + BALL_SIZE / 2) > Paddle[i].x && (Ball.x + BALL_SIZE / 2) < (Paddle[i].x + PADDLE_WIDTH) )
+			if( (Ball.x + Ball.size / 2) > Paddle[i].x && (Ball.x + Ball.size / 2) < (Paddle[i].x + Paddle[i].width) )
 			{
 				Ball.xspeed = -(Ball.xspeed); //bounce off paddle
 				Ball.x += (Ball.xspeed / 2); //fix "ball stuck in paddle" bug
@@ -973,10 +991,10 @@ void GamePhysics(void)
 				BallSpark(BALL_HIT_SPARKS);
 				
 				Ball.yspeed += (Paddle[i].yspeed / 2); //so you can change ball trajectory with paddle
-				if(Ball.yspeed > BALL_MAX_SPEED)
-					Ball.yspeed = BALL_MAX_SPEED;
-				else if(Ball.yspeed < -(BALL_MAX_SPEED))
-					Ball.yspeed = -(BALL_MAX_SPEED);
+				if(Ball.yspeed > Ball.maxspeed)
+					Ball.yspeed = Ball.maxspeed;
+				else if(Ball.yspeed < -(Ball.maxspeed))
+					Ball.yspeed = -(Ball.maxspeed);
 				
 				//if paddle is stationary on impact, ball.xspeed gets increased
 				if(Paddle[i].yspeed == 0)
@@ -984,14 +1002,14 @@ void GamePhysics(void)
 					if(Ball.xspeed < 0)
 					{
 						Ball.xspeed--;
-						if(Ball.xspeed < -(BALL_MAX_SPEED))
-							Ball.xspeed = -BALL_MAX_SPEED;
+						if(Ball.xspeed < -(Ball.maxspeed))
+							Ball.xspeed = -Ball.maxspeed;
 					}	
 					else if(Ball.xspeed > 0)
 					{
 						Ball.xspeed++;
-						if(Ball.xspeed > BALL_MAX_SPEED)
-							Ball.xspeed = BALL_MAX_SPEED;
+						if(Ball.xspeed > Ball.maxspeed)
+							Ball.xspeed = Ball.maxspeed;
 					}
 				}
 			}
@@ -999,7 +1017,7 @@ void GamePhysics(void)
 	}
 			
 	//bounce off top/bottom walls
-	if((Ball.y + BALL_SIZE / 2) <= 0 || (Ball.y + BALL_SIZE / 2) >= GameState.resy)
+	if((Ball.y + Ball.size / 2) <= 0 || (Ball.y + Ball.size / 2) >= GameState.resy)
 	{
 		Ball.yspeed = -(Ball.yspeed);
 		BallSpark(BALL_HIT_SPARKS);
@@ -1026,8 +1044,8 @@ void GameRender(void)
 	int i;
 	for(i=0;i<2;i++)
 	{
-		paddledims[i].w = PADDLE_WIDTH;
-		paddledims[i].h = PADDLE_LENGTH;
+		paddledims[i].w = Paddle[i].width;
+		paddledims[i].h = Paddle[i].height;
 		paddledims[i].x = Paddle[i].x;
 		paddledims[i].y = Paddle[i].y;
 		SDL_FillRect(screen, &paddledims[i], SDL_MapRGB(screen->format, Paddle[i].r, Paddle[i].g, Paddle[i].b));
@@ -1035,7 +1053,7 @@ void GameRender(void)
 		//BoxRGBA is slow, use it minimally.
 		
 		//paddle outline
-		rectangleRGBA(screen, Paddle[i].x, Paddle[i].y, Paddle[i].x + PADDLE_WIDTH, Paddle[i].y + PADDLE_LENGTH, 10,10,10,255);
+		rectangleRGBA(screen, Paddle[i].x, Paddle[i].y, Paddle[i].x + Paddle[i].width, Paddle[i].y + Paddle[i].height, 10,10,10,255);
 	}
 	
 	//draw scores in upper window
@@ -1052,8 +1070,8 @@ void GameRender(void)
 	SDL_Rect balldims;
 	balldims.x = Ball.x;
 	balldims.y = Ball.y;
-	balldims.w = BALL_SIZE;
-	balldims.h = BALL_SIZE;
+	balldims.w = Ball.size;
+	balldims.h = Ball.size;
 	SDL_FillRect(screen, &balldims, SDL_MapRGB(screen->format, 255, 255, 255));  //(screen->format, Ball.r, Ball.g, Ball.b));
 	
 	if(Ball.movedelay > 0)
@@ -1067,7 +1085,7 @@ void GameRender(void)
 	{
 		char debugtext[64];
 		sprintf(debugtext, "Xs: %2.2f, Ys: %2.2f", Ball.xspeed, Ball.yspeed);
-		DrawText(debugtext,Ball.x + BALL_SIZE,Ball.y + BALL_SIZE); 
+		DrawText(debugtext,Ball.x + Ball.size,Ball.y + Ball.size); 
 	}
 		
 	if(GameState.paused)
@@ -1077,12 +1095,12 @@ void GameRender(void)
 void AIThink(void)
 {	
 	//this is a fairly simple AI. Not much is needed for pong.
-	if((Paddle[0].x - Ball.x) <= AI_REACT_DIST)
+	if((Paddle[0].x - Ball.x) <= AI.reactdist)
 	{
-		if((Ball.y + (BALL_SIZE / 2)) > (Paddle[0].y + ((PADDLE_LENGTH / 2) + AI_TOLERANCE)))
-			Paddle[0].yspeed = PADDLE_SPEED;
-		else if((Ball.y + (BALL_SIZE / 2)) < (Paddle[0].y + ((PADDLE_LENGTH / 2) - AI_TOLERANCE)))
-			Paddle[0].yspeed = -(PADDLE_SPEED);
+		if((Ball.y + (Ball.size / 2)) > (Paddle[0].y + ((Paddle[0].height / 2) + AI.tolerance)))
+			Paddle[0].yspeed = Paddle[0].speed;
+		else if((Ball.y + (Ball.size / 2)) < (Paddle[0].y + ((Paddle[0].height / 2) - AI.tolerance)))
+			Paddle[0].yspeed = -(Paddle[0].speed);
 		else
 			Paddle[0].yspeed = 0;
 	}
@@ -1094,10 +1112,10 @@ void InitGame()
 {
 	//init paddles
 	Paddle[0].x = 16;
-	Paddle[0].y = (GameState.resy / 2) - (PADDLE_LENGTH / 2);
+	Paddle[0].y = (GameState.resy / 2) - (Paddle[0].height / 2);
 	
-	Paddle[1].x = GameState.resx - (16 + PADDLE_WIDTH); 
-	Paddle[1].y = (GameState.resy / 2) - (PADDLE_LENGTH / 2);
+	Paddle[1].x = GameState.resx - (16 + Paddle[1].width); 
+	Paddle[1].y = (GameState.resy / 2) - (Paddle[1].height / 2);
 	
 	GameState.winner = -1;
 	
@@ -1108,8 +1126,8 @@ void InitGame()
 
 void ResetBall(void)
 {
-	Ball.x = (GameState.resx / 2) - (BALL_SIZE / 2);
-	Ball.y = (GameState.resy / 2) - (BALL_SIZE / 2);
+	Ball.x = (GameState.resx / 2) - (Ball.size / 2);
+	Ball.y = (GameState.resy / 2) - (Ball.size / 2);
 	Ball.movedelay = BALL_DELAY * MAX_FPS;
 	
 	
@@ -1117,15 +1135,15 @@ void ResetBall(void)
 	int rneg;
 	rneg = RandInt(1,10);
 	if(rneg > 5)
-		Ball.xspeed = RandFloat((BALL_MAX_SPEED / 2),BALL_MAX_SPEED - (BALL_MAX_SPEED / 4));
+		Ball.xspeed = RandFloat((Ball.maxspeed / 2),Ball.maxspeed - (Ball.maxspeed / 4));
 	else if(rneg <= 5)
-		Ball.xspeed = -(RandFloat((BALL_MAX_SPEED / 2),BALL_MAX_SPEED - (BALL_MAX_SPEED / 4)));
+		Ball.xspeed = -(RandFloat((Ball.maxspeed / 2),Ball.maxspeed - (Ball.maxspeed / 4)));
 		
 	rneg = RandInt(1,10);
 	if(rneg > 5)
-		Ball.yspeed = RandFloat((BALL_MAX_SPEED / 4),BALL_MAX_SPEED / 3);
+		Ball.yspeed = RandFloat((Ball.maxspeed / 4),Ball.maxspeed / 3);
 	else if(rneg <= 5)
-		Ball.yspeed = -(RandFloat((BALL_MAX_SPEED / 4),BALL_MAX_SPEED / 3));
+		Ball.yspeed = -(RandFloat((Ball.maxspeed / 4),Ball.maxspeed / 3));
 	
 	if(GameState.debug)
 		printf("Generated random ball speeds X=%2.2f, Y=%2.2f\n",Ball.xspeed,Ball.yspeed);
@@ -1134,7 +1152,7 @@ void ResetBall(void)
 void GoalCheck(void)
 {
 	//check if ball meets back wall, score a point
-	if((Ball.x + BALL_SIZE / 2) < 0)
+	if((Ball.x + Ball.size / 2) < 0)
 	{	
 		Paddle[1].score++; //bot scores a pointer
 		if(!(EndGameCheck()))
@@ -1151,7 +1169,7 @@ void GoalCheck(void)
 			puts("End game"); //end game screen
 		}
 	}
-	else if((Ball.x + BALL_SIZE / 2) > GameState.resx)
+	else if((Ball.x + Ball.size / 2) > GameState.resx)
 	{
 		Paddle[0].score++; //player scores a pointer
 		if(!(EndGameCheck()))
@@ -1281,8 +1299,8 @@ void BallTrail(int lifespan)
 	Tmp.y = Ball.y;
 	Tmp.xspeed = 0;
 	Tmp.yspeed = 0;
-	Tmp.w = BALL_SIZE;
-	Tmp.h = BALL_SIZE;
+	Tmp.w = Ball.size;
+	Tmp.h = Ball.size;
 	Tmp.r = 255; Tmp.g = 255; Tmp.b = 255; Tmp.a = 255;
 	Tmp.lifespan = lifespan;
 	Tmp.alphafade = 1;
