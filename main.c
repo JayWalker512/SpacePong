@@ -246,10 +246,6 @@ void InitMisc(void)
 		Paddle[i].score = 0;
 	}
 	
-	//init default AI values
-	AI.reactdist = GameState.resx / 2;
-	AI.tolerance = 20;
-	
 	UpdateProgressBar(0,1);
 }
 
@@ -264,6 +260,10 @@ void InitScales(void)
 	
 	Ball.maxspeed = GameState.resx / 64;
 	Ball.size = GameState.resx / 80;
+	
+	//init default AI values
+	AI.reactdist = GameState.resx / 2;
+	AI.tolerance = 20;
 }
 
 void DrawText(char text[128], int x, int y) 
@@ -1120,7 +1120,7 @@ void InitGame()
 	GameState.winner = -1;
 	
 	ResetBall();
-	InitScales(); //set scaling back to default incase something changed sizes
+	GrowPaddles();
 	
 	SetGameState(STATE_PLAYING);
 }
@@ -1156,6 +1156,7 @@ void GoalCheck(void)
 	if((Ball.x + Ball.size / 2) < 0)
 	{	
 		Paddle[1].score++; //bot scores a pointer
+		
 		if(!(EndGameCheck()))
 		{
 			Firework(GameState.resx / 2, GameState.resy / 2, \
@@ -1173,6 +1174,7 @@ void GoalCheck(void)
 	else if((Ball.x + Ball.size / 2) > GameState.resx)
 	{
 		Paddle[0].score++; //player scores a pointer
+		
 		if(!(EndGameCheck()))
 		{
 			Firework(GameState.resx / 2, GameState.resy / 2, \
@@ -1207,6 +1209,36 @@ int EndGameCheck(void)
 	return endgame;
 }
 
+//#####################################
+//Silly mods?
+//#####################################
+
+void GrowPaddles(void) //scale paddles per score
+{
+	int scoredif;
+	int growthscale;
+	scoredif = Paddle[0].score - Paddle[1].score;
+	growthscale = GameState.resy / 100;
+	if (scoredif > 0)
+	{
+		//Paddle[1].height += GameState.resy / 160;
+		//Paddle[0].height -= GameState.resy / 160;
+		Paddle[0].height = (GameState.resy / 7) - (scoredif * growthscale);
+		Paddle[1].height = (GameState.resy / 7) + (scoredif * growthscale);
+	}
+	else if (scoredif < 0)
+	{
+		//Paddle[0].height += GameState.resy / 160;
+		//Paddle[1].height -= GameState.resy / 160;
+		Paddle[0].height = (GameState.resy / 7) + (-scoredif * growthscale);
+		Paddle[1].height = (GameState.resy / 7) - (-scoredif * growthscale);
+	}
+	else if (scoredif == 0)
+	{
+		Paddle[1].height = (GameState.resy / 7);
+		Paddle[0].height = (GameState.resy / 7);
+	}
+}
 
 //#####################################
 //Game Effect (FX) Functions

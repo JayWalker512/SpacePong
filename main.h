@@ -165,6 +165,8 @@ void InitGame(void); //set up game variables and start playing
 void ResetBall(void); //reset ball to middle with new velocities
 void GoalCheck(void); //check if ball hits either side of screen for score
 int EndGameCheck(void); //check if score for either player has reached max; show winning screen
+//silly mods?
+void GrowPaddles(void); //scale paddles per score
 
 //Game Effect (FX) Functions
 void LoadBackgrounds(void); //load all background images into Backgrounds[]
