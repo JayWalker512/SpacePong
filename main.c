@@ -171,7 +171,7 @@ int InitSDL(s_state GameState)
 		return 0;
 	}	
 	
-	if(!(font = TTF_OpenFont("arial.ttf", 12))) //load font
+	if(!(font = TTF_OpenFont("arial.ttf", 14))) //load font
 	{
 		puts("Unable to load font! (arial.ttf)");
 		return 0;
@@ -1244,8 +1244,8 @@ void InitBackground(void)
 	Background.yspeed = RandFloat(-BACKGROUND_SPEED,BACKGROUND_SPEED);
 	
 	//this of course assumes background dimensions are even numbers
-	Background.x = (Background.image->w / 2);
-	Background.y = (Background.image->h / 2);
+	Background.x = (Background.image->w / 4);
+	Background.y = (Background.image->h / 4);
 }
 
 void BallSpark(int numsparks)
