@@ -1155,6 +1155,8 @@ void GoalCheck(void)
 	if((Ball.x + Ball.size / 2) < 0)
 	{	
 		Paddle[1].score++; //bot scores a pointer
+		GrowPaddles();
+		
 		if(!(EndGameCheck()))
 		{
 			Firework(GameState.resx / 2, GameState.resy / 2, \
@@ -1172,6 +1174,8 @@ void GoalCheck(void)
 	else if((Ball.x + Ball.size / 2) > GameState.resx)
 	{
 		Paddle[0].score++; //player scores a pointer
+		GrowPaddles();
+		
 		if(!(EndGameCheck()))
 		{
 			Firework(GameState.resx / 2, GameState.resy / 2, \
@@ -1206,6 +1210,25 @@ int EndGameCheck(void)
 	return endgame;
 }
 
+//#####################################
+//Silly mods?
+//#####################################
+
+void GrowPaddles(void) //scale paddles per score
+{
+	int scoredif;
+	scoredif = Paddle[0].score - Paddle[1].score;
+	if (scoredif > 0)
+	{
+		Paddle[1].height += GameState.resy / 160;
+		Paddle[0].height -= GameState.resy / 160;
+	}
+	else if (scoredif < 0)
+	{
+		Paddle[0].height += GameState.resy / 160;
+		Paddle[1].height -= GameState.resy / 160;
+	}
+}
 
 //#####################################
 //Game Effect (FX) Functions
