@@ -727,12 +727,12 @@ void MenuRender(void)
 		{
 			if (GameState.winner = 0)
 			{
-				sprintf(EndRoundText, "Player 2 Wins!");
+				sprintf(EndRoundText, "Player 1 Wins!");
 				DrawText(EndRoundText, ((GameState.resx / 2) - (strlen(EndRoundText) * 2)),(GameState.resy / 2) - 24);
 			}
 			else if (GameState.winner = 1)
 			{
-				sprintf(EndRoundText, "Player 1 Wins!");
+				sprintf(EndRoundText, "Player 2 Wins!");
 				DrawText(EndRoundText, ((GameState.resx / 2) - (strlen(EndRoundText) * 2)),(GameState.resy / 2) - 24);
 			}
 		}
@@ -1120,6 +1120,7 @@ void InitGame()
 	GameState.winner = -1;
 	
 	ResetBall();
+	InitScales(); //set scaling back to default incase something changed sizes
 	
 	SetGameState(STATE_PLAYING);
 }
