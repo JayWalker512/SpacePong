@@ -1095,7 +1095,7 @@ void GameRender(void)
 void AIThink(void)
 {	
 	//this is a fairly simple AI. Not much is needed for pong.
-	if((Paddle[0].x - Ball.x) <= AI.reactdist)
+	if((Ball.x - Paddle[0].x) <= AI.reactdist)
 	{
 		if((Ball.y + (Ball.size / 2)) > (Paddle[0].y + ((Paddle[0].height / 2) + AI.tolerance)))
 			Paddle[0].yspeed = Paddle[0].speed;
