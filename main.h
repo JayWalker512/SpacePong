@@ -14,7 +14,7 @@
 
 //variable decs
 
-//Engine stuffs
+//Engine stuff
 typedef struct {
 	int frames,update,maxframetime,framestart,framems;
 	float frametime;
@@ -80,7 +80,7 @@ typedef struct {
 	int x,y;
 	} s_menu;
 	
-//Game stuff
+//Game specific stuff
 typedef struct {
 	int x,y;
 	int height, width; //obvi needed for scaling
@@ -100,14 +100,18 @@ struct {
 typedef struct {
 	float x,y;
 	float xspeed,yspeed;
-	float maxspeed; //max speed herp derp. scale this
+	float maxspeed; //max speed, this is scaled per resolution
 	int size;
 	int enabled;
 	unsigned char r,g,b,a;
 	int movedelay;
 	int trails,trailspawnrate;
 	} s_ball;
-
+	
+struct {
+	int paddlehit;
+	int wallhit;
+	} Samples;
 //global vars
 
 //sdl vars
@@ -132,6 +136,7 @@ int InitSDL(s_state GameState); //set up SDL. Returns 1 on success, 0 on failure
 int InitArgs(int argc, char *argv[]);
 void InitMisc(void); //various things that need to be initialized
 void InitScales(void); //scale objects in game per resolution
+void InitSamples(void);
 void DrawText(char text[128], int x, int y); //draws white text with black bkg
 void ClearScreen(int r, int g, int b); //clear screen with any color
 SDL_Surface *LoadImage(char filename[128]); //load 24bit bmp optimized to 32bit
