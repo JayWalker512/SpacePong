@@ -1,0 +1,370 @@
+#include <stdio.h>
+#include <assert.h>
+
+#include "SDL_mixer.h"
+#include "Sound.h"
+
+//internal functions only
+static int SoundSetError(char error[SOUND_ERR_LENGTH]);
+static float ClampFloat(float input, float min, float max);
+static int ClampInt(int input, int min, int max);
+
+#define SOUND_NUM_CHUNKS 256
+static Mix_Chunk *Sounds[SOUND_NUM_CHUNKS];
+
+//TODO: impliment dynamically allocated sound chunks and music
+//static Mix_Chunk *Sounds[];
+//unsigned int NumSounds = 0;
+
+/******************************************************************************
+error handling
+******************************************************************************/
+static char SoundError[SOUND_ERR_LENGTH] = "";
+
+static int SoundSetError(char error[SOUND_ERR_LENGTH])
+{
+	//copies error string into SoundError
+	int i = 0;
+	while (*(error+i))
+	{
+		*(SoundError+i) = *(error+i);
+		i++;
+	}	
+	return 1;
+}
+
+char *SoundGetError(void)
+{
+	return SoundError;
+}
+
+
+/******************************************************************************
+init and loading files
+******************************************************************************/
+int SoundInitSound(int channels, int rate, int buffers)
+{
+	short format = AUDIO_S16SYS;
+
+	if (Mix_OpenAudio(rate, format, channels, buffers) != 0)
+	{
+		char err[SOUND_ERR_LENGTH];
+		sprintf(err, "Unable to init: %s\n", SDL_GetError());
+		SoundSetError(err);
+		return 0;
+	}
+	else
+		return 1;
+}
+
+void SoundCloseSound(void)
+{
+	int i = 0;
+	for (i=0;i<SOUND_NUM_CHUNKS;i++)
+		Mix_FreeChunk(Sounds[i]);
+		
+	Mix_CloseAudio();
+}
+
+
+/******************************************************************************
+loading files/samples
+******************************************************************************/
+int SoundLoadSampleWAV(const char *file)
+{
+	int i = 0;
+	while (Sounds[i] != NULL)
+	{
+		i++;
+	}
+
+	Sounds[i] = Mix_LoadWAV(file);
+	if (Sounds[i] == NULL)
+	{
+		char err[SOUND_ERR_LENGTH];
+		sprintf(err, "Unable to load Wav: %s\n", Mix_GetError());
+		SoundSetError(err);
+		return -1;
+	}
+	return i;
+}
+
+int SoundUnloadSample(int sample)
+{
+	Mix_FreeChunk(Sounds[sample]);
+	
+	if(Sounds[sample] == NULL)
+		return 1;
+	else
+		return 0;
+}
+
+
+/******************************************************************************
+music loading
+******************************************************************************/
+#define SOUND_NUM_MUSICS 8
+static Mix_Music *Music[SOUND_NUM_MUSICS];
+
+int SoundLoadMusic(const char *file)
+{
+	int i = 0;
+	while (Music[i] != NULL)
+	{
+		i++;
+	}
+
+	Music[i] = Mix_LoadMUS(file);
+	if (Music[i] == NULL)
+	{
+		char err[SOUND_ERR_LENGTH];
+		sprintf(err, "Unable to load Wav: %s\n", Mix_GetError());
+		SoundSetError(err);
+		return -1;
+	}
+	return i;
+}
+
+int SoundUnloadMusic(int track)
+{
+	Mix_FreeMusic(Music[track]);
+	
+	if(Music[track] == NULL)
+		return 1;
+	else
+		return 0;
+}
+
+
+/******************************************************************************
+playing sounds
+******************************************************************************/
+int SoundPlaySample(int sample)
+{	
+	assert(sample >= 0);
+	
+	//FIXME: hackish fix. get rid of the Channels[] and find a better
+	//way to implement sample/channel tracking
+	return Mix_PlayChannel(-1, Sounds[sample], 0);
+}
+
+int SoundLoopSample(int sample, int loops)
+{
+	int channel;
+	channel = Mix_PlayChannel(-1, Sounds[sample], loops);
+	return channel;
+}
+
+int SoundIsChannelPlaying(int channel)
+{
+	if (Mix_Playing(channel) != 0)
+		return 1;
+	else
+		return 0;
+}
+
+void SoundHaltChannel(int channel)
+{
+	Mix_HaltChannel(channel);
+}
+
+void SoundSetChannelFinishedFunc(void (*channelFinished)(int channel))
+{
+	Mix_ChannelFinished(channelFinished);
+}
+
+
+/******************************************************************************
+music playing
+******************************************************************************/
+int SoundPlayMusic(int track)
+{
+	//TODO: do more error checking
+	if (Music[track] != NULL)
+	{
+		if (Mix_PlayMusic(Music[track], 1))
+		{
+			return 1;
+		}
+		else
+			return 0;
+	}
+	else
+		return 0;
+}
+
+int SoundLoopMusic(int track, int loops)
+{
+	//TODO: do more error checking
+	if (Music[track] != NULL)
+	{
+		if (Mix_PlayMusic(Music[track], loops))
+		{
+			return 1;
+		}
+		else
+			return 0;
+	}
+	else
+		return 0;
+}
+
+void SoundStopMusic(void)
+{
+	Mix_HaltMusic();
+}
+
+int SoundIsMusicPLaying(void)
+{
+	return Mix_PlayingMusic();
+}
+
+int SoundIsMusicPaused(void)
+{
+	return Mix_PausedMusic();
+}
+
+void SoundToggleMusicPaused(void)
+{
+	if (Mix_PausedMusic())
+		Mix_PauseMusic();
+	else
+		Mix_ResumeMusic();
+}
+
+
+/******************************************************************************
+special effects
+******************************************************************************/
+int SoundPanChannelFloat(int channel, float panning)
+{
+	if(Mix_Playing(channel))
+	{
+		int left, right, offset;
+		
+		panning = ClampFloat(panning, -1.0, 1.0);
+			
+		offset = (int)(panning * 127);
+		
+		if (panning > 0)
+		{
+			right = 127 + offset;
+			left = 127 - offset;
+		}
+		else if (panning < 0)
+		{
+			offset = -offset;
+			left = 127 + offset;
+			right = 127 - offset;
+		}
+		else
+		{
+			left = 127;
+			right = 127;
+		}
+		
+		//printf("Left: %d, Right: %d\n", left, right);
+		
+		if(Mix_SetPanning(channel, left, right))
+			return 1;
+		else
+			return 0; //TODO: error checking?
+	}
+	else
+		return 0;
+}
+
+
+int SoundPanChannelInt(int channel, signed char panning)
+{
+	if(Mix_Playing(channel))
+	{
+		int left, right;
+	
+		if (panning > 0)
+		{
+			right = 127 + panning;
+			left = 255 - right;
+		}
+		else if (panning < 0)
+		{
+			left = 127 + (-panning);
+			right = 255 - left;
+		}
+		else
+		{
+			left = 128;
+			right = 128;
+		}
+		
+		if(Mix_SetPanning(channel, left, right))
+			return 1;
+		else
+			return 0; //TODO: error checking?
+	}
+	else
+		return 0;
+}
+
+int SoundSetChannelDistanceFloat(int channel, float distance)
+{
+	if(Mix_Playing(channel))
+	{
+		distance = ClampFloat(distance, 0.0, 1.0);
+		
+		int dist;
+		dist = (int)(255 * distance);
+		//printf("Set distance to %d\n", dist);
+
+		if(Mix_SetDistance(channel, dist))
+			return 1;
+		else
+			return 0; //TODO: error checking?
+	}
+	else
+		return 0;
+}
+
+int SoundSetChannelDistanceInt(int channel, unsigned char distance)
+{
+
+	//FIXME: you know the drill
+	if(Mix_Playing(channel))
+	{
+		//TODO: how to moron check? distance wraps so it wont break either way
+		
+		if(Mix_SetDistance(channel, distance))
+			return 1;
+		else
+			return 0; //TODO: error checking?
+	}
+	else
+		return 0;
+}
+
+/******************************************************************************
+internal functions only
+******************************************************************************/
+static float ClampFloat(float input, float min, float max)
+{
+	if (input <= min)
+		return min;
+	else if (input >= max)
+		return max;
+	else
+		return input;
+		
+	return 0;
+}
+
+static int ClampInt(int input, int min, int max)
+{
+	if (input <= min)
+		return min;
+	else if (input >= max)
+		return max;
+	else
+		return input;
+		
+	return 0;
+}

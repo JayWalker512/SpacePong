@@ -1,0 +1,48 @@
+#define SOUND_ERR_LENGTH 256
+
+//error handling
+//static int Sound_SetError(char error[SOUND_ERR_LENGTH]); //
+char *Sound_GetError(void); //
+
+//init and loading files
+int Sound_InitSound(int channels, int rate, int buffers); //
+void Sound_CloseSound(void); //
+
+//loading files/samples
+int Sound_LoadSampleWAV(const char *file); //
+int Sound_UnloadSample(int sample); //
+
+//music loading
+int Sound_LoadMusic(const char *file); //
+int Sound_UnloadMusic(int track); //
+
+//playing sounds
+int Sound_PlaySample(int sample); //
+int Sound_LoopSample(int sample, int loops); //
+
+int Sound_IsChannelPlaying(int channel); //
+void Sound_HaltChannel(int channel); //
+
+void Sound_SetChannelFinishedFunc(void (*channelfinished)(int channel));
+
+//music playing
+int Sound_PlayMusic(int track); //
+int Sound_LoopMusic(int track, int loops); //
+void Sound_StopMusic(void); //
+
+int Sound_IsMusicPLaying(void); //
+int Sound_IsMusicPaused(void); //
+void Sound_ToggleMusicPaused(void); //
+
+//special effects
+int Sound_PanChannelUnsignedFloat(int channel, float panning); //float 0.0 - 1.0
+int Sound_PanChannelFloat(int channel, float panning); //
+int Sound_PanChannelInt(int channel, signed char panning); //
+
+int Sound_SetChannelDistanceFloat(int channel, float distance); //
+int Sound_SetChannelDistanceInt(int channel, unsigned char distance); //
+
+/*internal functions only
+static float ClampFloat(float input, float min, float max);
+static int ClampInt(int input, int min, int max);*/
+
