@@ -1,4 +1,4 @@
-SDLpong written by Brandon Foltz as practice for coding in C.
+SpacePong written by Brandon Foltz as practice for coding in C.
 
 Controls:
 Up/Down: controls Player 1.
@@ -9,3 +9,5 @@ B: Load new background image.
 P: Pause.
 M: Return to menu.
 Esc: Quit.
+
+This game is released under the Gnu GPL V3 license.
