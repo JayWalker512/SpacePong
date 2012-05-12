@@ -40,9 +40,12 @@ TODO: Clean up code!
 //engine
 //#define WINDOW_WIDTH 640
 //#define WINDOW_HEIGHT 480
+#define DEFAULT_WIN_WIDTH 640
+#define DEFAULT_WIN_HEIGHT 480
 #define BPP 32
 #define WINDOW_TITLE "SpacePong"
 #define MAX_FPS 32 //set this to some high number to pseudo-uncap fps (even numbers plz)
+#define DATADIR "data"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -136,8 +139,8 @@ int InitArgs(int argc, char *argv[])
 {
 	//might want some extra error checking in here
 	//initializing default gamestate params
-	GameState.resx = 640;
-	GameState.resy = 480;
+	GameState.resx = DEFAULT_WIN_WIDTH;
+	GameState.resy = DEFAULT_WIN_HEIGHT;
 	GameState.fullscreen = 0;
 	
 	int i = 0;
@@ -174,7 +177,7 @@ int InitSDL(s_state GameState)
 		return 0;
 	}	
 	
-	if(!(font = TTF_OpenFont("arial.ttf", 14))) //load font
+	if(!(font = TTF_OpenFont(DATADIR"/arial.ttf", 14))) //load font
 	{
 		puts("Unable to load font! (arial.ttf)");
 		return 0;
@@ -277,9 +280,9 @@ void InitSamples(void)
 	Samples.paddlehit = -1;
 	Samples.wallhit = -1;
 
-	Samples.paddlehit = SoundLoadSampleWAV("paddle_hit.wav");
+	Samples.paddlehit = SoundLoadSampleWAV(DATADIR"/paddle_hit.wav");
 		//puts(Sound_GetError());
-	Samples.wallhit = SoundLoadSampleWAV("wall_hit.wav");
+	Samples.wallhit = SoundLoadSampleWAV(DATADIR"/wall_hit.wav");
 		//puts(Sound_GetError());
 		
 	printf("Paddle sample: %d, Wall sample: %d\n", \
@@ -291,7 +294,7 @@ void InitSamples(void)
 void DrawText(char text[128], int x, int y) 
 {
 	//could use a better text drawing function... 
-	SDL_Color foregroundColor = { 255, 255, 255 }; 
+	SDL_Color foregroundColor = { 255, 255, 255, 255 }; 
    	//SDL_Color backgroundColor = { 0, 0, 0 };
    	SDL_Rect textLocation = { x, y, 0, 0 };
 	//textSurface = TTF_RenderText_Shaded(font, text, foregroundColor, backgroundColor);
@@ -481,7 +484,7 @@ void RegulateFPS(void)
 
 	if(timetodelay > 0)
 	{
-		if(timetodelay < Frames.maxframetime);
+		if(timetodelay < Frames.maxframetime)
 			SDL_Delay(timetodelay);
 	}
 }
@@ -586,7 +589,7 @@ int UpdateProgressBar(int mode, int param)
 	SDL_FillRect(screen, &bar, SDL_MapRGB(screen->format, 0, 255, 0));
 	/*rectangleRGBA(screen, (GameState.resx / 2) - 50, (GameState.resy / 2) - 10, \
 				((GameState.resx / 2) - 50) + progressbar, (GameState.resy / 2) + 10, \
-				0,255,0,255);			*/
+				0,255,0,255);	*/
 					
 	SDL_Flip(screen);
 	
@@ -1299,13 +1302,13 @@ void GrowPaddles(void) //scale paddles per score
 
 void LoadBackgrounds(void)
 {
-	Background.numimg = DetectJPGs("./img");
+	Background.numimg = DetectJPGs(DATADIR);
 	
 	int i;
 	for(i=1;i<=Background.numimg;i++)
 	{
 		char imgname[64];
-		sprintf(imgname,"./img/%d.jpg", i);
+		sprintf(imgname,DATADIR"/%d.jpg", i);
 		if(!(Background.Backgrounds[i] = LoadImage(imgname)))
 		{
 			puts("Loading background image failed!");

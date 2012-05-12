@@ -1,0 +1,18 @@
+#Makefile specifically for 64-bit Linux build.
+
+CC = gcc
+CFLAGS = -Wall -Wextra -g -m64 -lSDL -lSDL_gfx -lSDL_ttf -lSDL_image -lSDL_mixer -I/usr/include/SDL
+
+all: pong_linux64 clean
+
+pong_linux64: main.o Sound.o
+	$(CC) $(CFLAGS) main.o Sound.o -o pong_linux64
+
+main.o: main.c main.h 
+	$(CC) $(CFLAGS) -c main.c
+
+Sound.o: Sound/Sound.c Sound/Sound.h
+	$(CC) $(CFLAGS) -c Sound/Sound.c
+
+clean:
+	rm *.o
