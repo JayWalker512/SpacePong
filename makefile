@@ -25,11 +25,11 @@ main32.o : main.c main.h
 main64.o : main.c main.h 
 	$(CC) $(CFLAGS64) -c main.c 
 	
-Sound32.o : Sound/Sound.c Sound/Sound.h
-	$(CC) $(CFLAGS32) -c Sound/Sound.c
+Sound32.o : Sound.c Sound.h
+	$(CC) $(CFLAGS32) -c Sound.c
 	
-Sound64.o : Sound/Sound.c Sound/Sound.h
-	$(CC) $(CFLAGS64) -c Sound/Sound.c
+Sound64.o : Sound.c Sound.h
+	$(CC) $(CFLAGS64) -c Sound.c
 	
 #trying to figure out mingw cross compilation in makefile
 mainwin.o : main.c main.h

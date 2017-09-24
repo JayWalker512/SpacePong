@@ -2,7 +2,7 @@
 
 //SDLpong main file
 //compile (on linux) with:
-//gcc main.c Sound/Sound.c -o pong -lSDL -lSDL_gfx -lSDL_ttf -lSDL_image -lSDL_mixer -I/usr/include/SDL
+//gcc main.c Sound.c -o pong -lSDL -lSDL_gfx -lSDL_ttf -lSDL_image -lSDL_mixer -I/usr/include/SDL
 
 /* SDLpong written by Brandon Foltz as practice for coding in C.
    This code may not be as nice/clean as it could be, but it's a 
@@ -33,7 +33,7 @@ TODO: Clean up code!
 #include "main.h"
 
 //sound
-#include "Sound/Sound.h"
+#include "Sound.h"
 
 //definitions
 
