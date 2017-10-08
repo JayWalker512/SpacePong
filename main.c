@@ -1,5 +1,7 @@
 /* This code is released under the GNU GPL v2 license. */
 
+/* Written by: Brandon Foltz */
+
 //SDLpong main file
 //compile (on linux) with:
 //gcc main.c Sound.c -o pong -lSDL -lSDL_gfx -lSDL_ttf -lSDL_image -lSDL_mixer -I/usr/include/SDL
@@ -40,8 +42,8 @@ TODO: Clean up code!
 //engine
 //#define WINDOW_WIDTH 640
 //#define WINDOW_HEIGHT 480
-#define DEFAULT_WIN_WIDTH 640
-#define DEFAULT_WIN_HEIGHT 480
+#define DEFAULT_WIN_WIDTH 800
+#define DEFAULT_WIN_HEIGHT 600
 #define BPP 32
 #define WINDOW_TITLE "SpacePong"
 #define MAX_FPS 32 //set this to some high number to pseudo-uncap fps (even numbers plz)
@@ -52,8 +54,8 @@ TODO: Clean up code!
 
 //--help text
 #define HELP_TEXT " Usage: pong [options] \n" \
-				" -w [window width in pixels] default: 640 \n" \
-				" -h [window height in pixels] default: 480\n" \
+				" -w [window width in pixels] default: 800 \n" \
+				" -h [window height in pixels] default: 600\n" \
 				" -f starts game in fullscreen mode" 
 
 //menu
@@ -177,9 +179,9 @@ int InitSDL(s_state GameState)
 		return 0;
 	}	
 	
-	if(!(font = TTF_OpenFont(DATADIR"/arial.ttf", 14))) //load font
+	if(!(font = TTF_OpenFont(DATADIR"/freefont/FreeMonoBold.ttf", 24))) //load font
 	{
-		puts("Unable to load font! (arial.ttf)");
+		puts("Unable to load font! (FreeMonoBold.ttf)");
 		return 0;
 	}
 	
@@ -216,7 +218,7 @@ void InitMisc(void)
 {
 	//render "loading..."
 	//SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));
-	DrawText("Loading...", (GameState.resx / 2) - 22, (GameState.resy / 2) - 32);
+	DrawText("Loading...", (GameState.resx / 2) - 60, (GameState.resy / 2) - 40);
 	UpdateProgressBar(0,1);
 
 	GameState.debug = 0; //debug mode is only useful when run from terminal
@@ -783,9 +785,9 @@ void MenuRender(void)
 	}
 
 	//drawing the menu in the (more or less) middle of the screen	
-	DrawText(MENU_TEXT, ((GameState.resx / 2) - (strlen(MENU_TEXT) * 2)),(GameState.resy / 2));
-	DrawText(MENU_TEXT2, ((GameState.resx / 2) - (strlen(MENU_TEXT2) * 2)),(GameState.resy / 2) + 14);
-	DrawText(MENU_TEXT3, ((GameState.resx / 2) - (strlen(MENU_TEXT3) * 2)),(GameState.resy / 2) + 28);
+	DrawText(MENU_TEXT, ((GameState.resx / 2) - (strlen(MENU_TEXT) * 7)),(GameState.resy / 2));
+	DrawText(MENU_TEXT2, ((GameState.resx / 2) - (strlen(MENU_TEXT2) * 7)),(GameState.resy / 2) + 30);
+	DrawText(MENU_TEXT3, ((GameState.resx / 2) - (strlen(MENU_TEXT3) * 7)),(GameState.resy / 2) + 60);
 }
 
 //#####################################
@@ -1025,7 +1027,7 @@ void GamePhysics(void)
 				panning *= 2.0;
 				panning -= 1.0;
 				SoundPanChannelFloat(playchannel, panning);
-				printf("Calced panning: %f\n", panning);
+				printf("Calculated panning: %f\n", panning);
 				
 				
 				
@@ -1322,8 +1324,11 @@ void LoadBackgrounds(void)
 
 void InitBackground(void)
 {		
-	int imgnum;
-	imgnum = RandInt(1, Background.numimg);
+	static int imgnum = 1;
+	imgnum++;
+	if (imgnum > Background.numimg) {
+		imgnum = 1;
+	}
 	//SDL_FreeSurface(Background.image); 
 	//dont need to free because it deletes surface in Backgrounds[]
 	printf("Switching background to: %d\n", imgnum);
